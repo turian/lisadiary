@@ -12,6 +12,11 @@ ISSUES:
  * I don't really know what the mercurial date format is, so my
  assumptions about the API might be incorrect.
  * I walk the entire repository graph. This might be slow.
+ * I assume a file was created when a file context has no parents. I am
+ not sure if this is correct.
+ * If a file is created (as per the above definition) twice, I assume the
+ earlier date as the file creation date. I am not sure if this is correct.
+
 """
 
 from common.mydict import sort as dictsort
@@ -27,6 +32,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG,)
 
 filelastchanged = {}
+filecreated = {}
 
 # Walk every commit
 ctxdone = {}
@@ -48,6 +54,19 @@ while len(ctxtodo) > 0:
             if filelastchanged[f] < fctx.date()[0]:
                 logging.debug("Updating last changed date of file %s from %f to %f" % (f, filelastchanged[f], fctx.date()[0]))
                 filelastchanged[f] = fctx.date()[0]
+
+            # Check if this file has no parents. If so, we assume that
+            # this is when the file was created.
+            # ISSUE: I am not sure if this is correct.
+            if len(fctx.parents()) == 0:
+                logging.debug("File %s was created %f" % (f, fctx.date()[0]))
+                if f in filecreated:
+                    # ISSUE: Do something smarter here. e.g. pick the earlier date.
+                    # FIXME FIXME FIXME
+                    continue
+                else:
+                    filecreated[f] = fctx.date()[0]
+            
         except mercurial.error.LookupError:
             # ISSUE: I have no idea why this exception occurs.
             logging.error("mercurial.error.LookupError on file %s at revision %s" % (ctx, f))
@@ -59,4 +78,5 @@ while len(ctxtodo) > 0:
 
 #for f in filelastchanged:
 #    print f, filelastchanged[f]
-print dictsort(filelastchanged)
+#print dictsort(filelastchanged)
+print dictsort(filecreated)
