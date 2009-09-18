@@ -14,6 +14,7 @@ ISSUES:
  * I walk the entire repository graph. This might be slow.
 """
 
+import mercurial.error
 from mercurial import hg,ui
 #uio = ui.ui(debug=True,verbose=True)
 uio = ui.ui()
@@ -35,10 +36,13 @@ while len(ctxtodo) > 0:
 
     for f in ctx.files():
         logging.debug("Looking at file %s" % f)
-        fctx = ctx.filectx(f)
-        assert fctx.path() == f
-        print fctx
-        print fctx, fctx.date()    
+        try:
+            fctx = ctx.filectx(f)
+            assert fctx.path() == f
+            print fctx
+            print fctx, fctx.date()
+        except mercurial.error.LookupError:
+            logging.error("mercurial.error.LookupError on file %s at revision %s" % (ctx, f))
 
     ctxdone[ctx] = True
     for newctx in ctx.parents():
