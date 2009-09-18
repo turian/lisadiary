@@ -61,9 +61,10 @@ while len(ctxtodo) > 0:
             if len(fctx.parents()) == 0:
                 logging.debug("File %s was created %f" % (f, fctx.date()[0]))
                 if f in filecreated:
-                    # ISSUE: Do something smarter here. e.g. pick the earlier date.
-                    # FIXME FIXME FIXME
-                    continue
+                    logging.warning("File %s seems to have been created twice: %f and %f" % (f, fctx.date()[0], filecreated[f]))
+                    # If this file seems to have been created twice, pick the earlier date.
+                    if filecreated[f] > fctx.date()[0]:
+                        filecreated[f] = fctx.date()[0]   
                 else:
                     filecreated[f] = fctx.date()[0]
             
